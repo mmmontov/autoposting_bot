@@ -1,4 +1,4 @@
-FROM python:3.12.7
+FROM python:3.11-slim
 
 RUN mkdir /autoposting_bot
 
