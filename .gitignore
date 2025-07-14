@@ -1,0 +1,11 @@
+.env
+diary.md
+test.py
+bot.sqlite
+structure.txt
+
+.venv/
+.mypy_cache/
+.vscode/
+__pycache__/
+.git/
