@@ -1,9 +1,7 @@
-import asyncio
+from openai import OpenAI
 import aiohttp
 from bs4 import BeautifulSoup
 from fake_useragent import UserAgent
-import google.generativeai as genai
-
 from app.core.config import config
 
 
@@ -14,18 +12,33 @@ async def create_recipe():
         recipe = await generate_recipe(recipe_text)
     return recipe, recipe_image
 
+
 async def generate_recipe(recipe):
-    genai.configure(api_key=config.gemimi.api_key)
-    ai_model = genai.GenerativeModel(config.gemimi.model)
+    client = OpenAI(
+        base_url=config.open_router.base_url,
+        api_key=config.open_router.api_key,
+    )
     prompt_template = str(open('app/parsing/recipes_parsing/recipe_prompt.txt', 'r').read())
     prompt = prompt_template.format( # Можно вынести в конфиг
         max_chars=900,
         raw_recipe=recipe,
         channel_tag='@best_tasty_recipes'  
     )
-    response = ai_model.generate_content(prompt)
-    recipe = response.text.strip() if response.text else "⚠️ Не удалось сгенерировать рецепт."
+    
+    
+    completion = client.chat.completions.create(
+        model=config.open_router.model,
+        messages=[
+            {
+            "role": "user",
+            "content": prompt
+            }
+        ]
+    )
+    recipe = completion.choices[0].message.content.strip() if completion.choices[0].message.content else "⚠️ Не удалось сгенерировать рецепт."
     return recipe
+
+
 
 async def _parse_recipe():
     headers = {'user-agent': UserAgent().random}

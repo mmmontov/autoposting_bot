@@ -24,13 +24,6 @@ async def start_bot():
     await dp.start_polling(bot, polling_timeout=20)
     
 
-async def r_func():
-    print('пост отправлен в рецепты')
-
-async def f_func():
-    print('пост отправлен в факты')
-
-
 
 if __name__ == '__main__':
     asyncio.run(start_bot())

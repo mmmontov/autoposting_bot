@@ -92,8 +92,7 @@ async def process_delete_first_string(callback: CallbackQuery):
 @router.callback_query(F.data == 'regenerate_text')
 async def process_regenerate_text(callback: CallbackQuery):
     if ChannelsControl.active_channel == '@best_tasty_recipes':
-        text = callback.message.text
-        print(text)
+        text = callback.message.caption
         new_text = await generate_recipe(text)
         await callback.message.edit_caption(caption=new_text,
                                             reply_markup=create_edit_post_kb())

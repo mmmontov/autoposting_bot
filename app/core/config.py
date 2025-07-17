@@ -21,11 +21,18 @@ class Gemini:
     model: str
     
 @dataclass
+class OpenRouter:
+    api_key: str
+    base_url: str
+    model: str
+    
+@dataclass
 class Config:
     tg_bot: TgBot
     tg_channel: TgChannel
     database: Database
     gemimi: Gemini
+    open_router: OpenRouter
     
 def load_config(path: str | None = None) -> Config:
     env = Env()
@@ -45,6 +52,11 @@ def load_config(path: str | None = None) -> Config:
         gemimi=Gemini(
             api_key=env('GEMINI_API_KEY'),
             model=env('GEMINI_MODEL')
+        ),
+        open_router=OpenRouter(
+            api_key=env('OPENROUTER_API_KEY'),
+            base_url=env('OPENROUTER_BASE_URL'),
+            model=env('OPENROUTER_MODEL')
         )
     )
 
