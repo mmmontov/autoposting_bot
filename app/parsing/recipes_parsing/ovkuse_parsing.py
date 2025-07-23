@@ -1,5 +1,5 @@
-from openai import OpenAI
-import aiohttp
+from openai import AsyncOpenAI
+import aiohttp, aiofiles
 from bs4 import BeautifulSoup
 from fake_useragent import UserAgent
 from app.core.config import config
@@ -14,11 +14,13 @@ async def create_recipe():
 
 
 async def generate_recipe(recipe):
-    client = OpenAI(
+    client = AsyncOpenAI(
         base_url=config.open_router.base_url,
         api_key=config.open_router.api_key,
     )
-    prompt_template = str(open('app/parsing/recipes_parsing/recipe_prompt.txt', 'r').read())
+    async with aiofiles.open('app/parsing/recipes_parsing/recipe_prompt.txt', 'r') as f:
+        prompt_template = await f.read()
+        
     prompt = prompt_template.format( # Можно вынести в конфиг
         max_chars=900,
         raw_recipe=recipe,
@@ -26,7 +28,7 @@ async def generate_recipe(recipe):
     )
     
     
-    completion = client.chat.completions.create(
+    completion = await client.chat.completions.create(
         model=config.open_router.model,
         messages=[
             {
@@ -35,8 +37,8 @@ async def generate_recipe(recipe):
             }
         ]
     )
-    recipe = completion.choices[0].message.content.strip() if completion.choices[0].message.content else "⚠️ Не удалось сгенерировать рецепт."
-    return recipe
+    recipe = completion.choices[0].message.content
+    return recipe.strip() if recipe else "⚠️ Не удалось сгенерировать рецепт."
 
 
 

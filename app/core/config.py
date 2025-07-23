@@ -7,18 +7,9 @@ class TgBot:
     admin_ids: list[str]
     
 @dataclass
-class TgChannel:
-    channel_names: list[str]
-    schedule_path: str
-    
-@dataclass
 class Database:
     path: str
-    
-@dataclass
-class Gemini:
-    api_key: str
-    model: str
+    users_path: str
     
 @dataclass
 class OpenRouter:
@@ -29,9 +20,7 @@ class OpenRouter:
 @dataclass
 class Config:
     tg_bot: TgBot
-    tg_channel: TgChannel
     database: Database
-    gemimi: Gemini
     open_router: OpenRouter
     
 def load_config(path: str | None = None) -> Config:
@@ -42,16 +31,9 @@ def load_config(path: str | None = None) -> Config:
             token=env('BOT_TOKEN'),
             admin_ids=list(env.list('ADMIN_IDS')),
         ),
-        tg_channel=TgChannel(
-            channel_names=list(env.list('CHANNEL_IDS')),
-            schedule_path=env('SCHEDULE_PATH')
-        ),
         database=Database(
-            path=env('DATABASE_PATH')
-        ),
-        gemimi=Gemini(
-            api_key=env('GEMINI_API_KEY'),
-            model=env('GEMINI_MODEL')
+            path=env('DATABASE_PATH'),
+            users_path=env('USERS_PATH')
         ),
         open_router=OpenRouter(
             api_key=env('OPENROUTER_API_KEY'),

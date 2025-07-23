@@ -1,10 +1,10 @@
 from sqlalchemy import insert, select, delete, desc
 from app.db.session import AsyncSessionLocal
-from app.db.models.queue_registry import queue_tables
+from app.db.models.queue_registry import tables_registry
 
 
 async def add_post(channel: str, post_text: str, image_url: str):
-    table = queue_tables[channel]
+    table = tables_registry.queue_tables[channel]
     
     async with AsyncSessionLocal() as session:
         await session.execute(insert(table).values(post_text=post_text, image_url=image_url))
@@ -12,7 +12,7 @@ async def add_post(channel: str, post_text: str, image_url: str):
         
         
 async def get_next_post_and_delete(channel: str):
-    table = queue_tables[channel]
+    table = tables_registry.queue_tables[channel]
     
     async with AsyncSessionLocal() as session:
         result = await session.execute(select(table).limit(1))
@@ -26,7 +26,7 @@ async def get_next_post_and_delete(channel: str):
 
 
 async def get_next_post(channel: str):
-    table = queue_tables[channel]
+    table = tables_registry.queue_tables[channel]
     
     async with AsyncSessionLocal() as session:
         result = await session.execute(select(table).limit(1))
@@ -35,7 +35,7 @@ async def get_next_post(channel: str):
 
 
 async def get_last_post_and_delete(channel: str):
-    table = queue_tables[channel]
+    table = tables_registry.queue_tables[channel]
     
     async with AsyncSessionLocal() as session:
         result = await session.execute(select(table).order_by(desc(table.c.id)).limit(1))
@@ -49,7 +49,7 @@ async def get_last_post_and_delete(channel: str):
 
 
 async def get_last_post(channel: str):
-    table = queue_tables[channel]
+    table = tables_registry.queue_tables[channel]
     
     async with AsyncSessionLocal() as session:
         result = await session.execute(select(table).order_by(desc(table.c.id)).limit(1))
@@ -59,7 +59,7 @@ async def get_last_post(channel: str):
 
 
 async def get_queue(channel: str):
-    table = queue_tables[channel]
+    table = tables_registry.queue_tables[channel]
     
     async with AsyncSessionLocal() as session:
         result = await session.execute(select(table))

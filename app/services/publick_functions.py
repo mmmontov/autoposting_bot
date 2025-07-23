@@ -18,7 +18,7 @@ async def publick_post(channel: str):
 
 
 # отправка сообщения с фактом
-async def send_fact(message: Message):
+async def send_fact(message: Message, swap_post=True):
     try:
         post_text, image_url = await gather_fact()
         # если присутствует текст    
@@ -27,31 +27,31 @@ async def send_fact(message: Message):
                 
             await message.answer_photo(photo=image_url, 
                                     caption=post_text, 
-                                    reply_markup=create_post_actions_kb()) 
+                                    reply_markup=create_post_actions_kb(swap_post)) 
     except ValidationError as err:
         print('ошибка в отправке')
-        await send_fact(message)
+        await send_fact(message, swap_post)
     except TypeError as err:
         print('ошибка в распаковке')
-        await send_fact(message)
+        await send_fact(message, swap_post)
     except TelegramBadRequest:
         print('сообщение слишком длинное') 
-        await send_fact(message)
+        await send_fact(message, swap_post)
         
 # отправка сообщения с рецептом
-async def send_recipe(message: Message):
+async def send_recipe(message: Message, swap_post=True):
     try:
         text, photo = await create_recipe()
         recipe_message = await message.answer_photo(photo=photo, caption=text, 
-                                                    reply_markup=create_post_actions_kb())
+                                                    reply_markup=create_post_actions_kb(swap_post))
         return recipe_message
     except ValidationError as err:
         print(f'ошибка в отправке {err}')
-        await send_recipe(message)
+        await send_recipe(message, swap_post)
     except TypeError as err:
         print(f'ошибка в распаковке {err}')
-        await send_recipe(message)
+        await send_recipe(message, swap_post)
     except TelegramBadRequest:
         print('сообщение слишком длинное') 
-        await send_recipe(message)
+        await send_recipe(message, swap_post)
 

@@ -3,6 +3,7 @@ diary.md
 test.py
 bot.sqlite
 structure.txt
+test_users.json
 
 .venv/
 .mypy_cache/
