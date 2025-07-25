@@ -8,7 +8,8 @@ def create_post_queue_model(table_name: str, metadata: MetaData):
         table_name,
         metadata,
         Column('id', Integer, primary_key=True),
-        Column('post_text', Text, nullable=False),
+        Column('post_text', Text, nullable=True),
         Column('image_url', Text, nullable=True),
+        Column('video_url', Text, nullable=True),
         extend_existing=True
     )

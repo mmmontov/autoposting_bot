@@ -3,11 +3,11 @@ from app.db.session import AsyncSessionLocal
 from app.db.models.queue_registry import tables_registry
 
 
-async def add_post(channel: str, post_text: str, image_url: str):
+async def add_post(channel: str, post_text: str, image_url: str = None, video_url: str = None):
     table = tables_registry.queue_tables[channel]
     
     async with AsyncSessionLocal() as session:
-        await session.execute(insert(table).values(post_text=post_text, image_url=image_url))
+        await session.execute(insert(table).values(post_text=post_text, image_url=image_url, video_url=video_url))
         await session.commit()
         
         

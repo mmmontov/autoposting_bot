@@ -67,6 +67,13 @@ def create_back_to_main_menu_kb() -> InlineKeyboardMarkup:
 def create_back_to_main_menu_or_skip_kb() -> InlineKeyboardMarkup:
     return create_inline_kb(CALLBACK_RU['back_to_main_menu_or_skip'], [2])
 
+
+def create_choose_content_type_kb() -> InlineKeyboardMarkup:
+    return create_inline_kb(CALLBACK_RU['choose_content_type'], [1, 1, 1, 2])
+
+def create_back_to_choose_content_type_kb() -> InlineKeyboardMarkup:
+    return create_inline_kb(CALLBACK_RU['back_to_choose_content_type'], [1])
+
 # =============================================================================
 
 

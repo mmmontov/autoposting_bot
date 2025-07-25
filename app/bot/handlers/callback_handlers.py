@@ -14,6 +14,7 @@ from app.core.utils import ChannelsControl
 from app.services.queue_service import *
 from app.services.scheduler import *
 from app.services.user_data import users_data
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 router = Router()
 
@@ -25,8 +26,10 @@ class AutopostingTimeSettings(StatesGroup):
 
 
 class CreatePostStates(StatesGroup):
-    waiting_for_text = State()
-    waiting_for_photo = State()
+    waiting_for_text_input = State()
+    waiting_for_video_input = State()
+    waiting_for_photo_input = State()
+    waiting_for_content_type = State()
 
 
 # ================================= posts main menu =================================
@@ -51,12 +54,16 @@ async def process_open_edit_menu(callback: CallbackQuery, regenerate_post: bool)
 @router.callback_query(F.data == 'add_to_queue')
 async def process_add_to_queue(callback: CallbackQuery, swap_post: bool):
     photo_id = None
-    if callback.message.photo:
+    video_id = None
+    if callback.message.video:
+        video_id = callback.message.video.file_id
+        post_text = callback.message.caption
+    elif callback.message.photo:
         photo_id = callback.message.photo[0].file_id
         post_text = callback.message.caption
     else:
         post_text = callback.message.text
-    await add_post(users_data.get_active_channel(callback.from_user.id), post_text, photo_id)
+    await add_post(users_data.get_active_channel(callback.from_user.id), post_text, photo_id, video_id)
     await callback.message.edit_reply_markup(reply_markup=create_main_actions_add_to_queue(swap_post))
     await callback.answer()
     
@@ -136,6 +143,8 @@ async def process_add_link_to_my_channel(callback: CallbackQuery, regenerate_pos
         elif callback.message.text:
             new_text = callback.message.text + link
             await callback.message.edit_text(text=new_text, reply_markup=create_edit_post_kb(regenerate_post))
+        else: 
+            await callback.message.edit_caption(caption=link, reply_markup=create_edit_post_kb(regenerate_post))
     except TelegramBadRequest:
         print('сообщение получается слишком длинным')
         await callback.answer()
@@ -182,29 +191,33 @@ async def process_set_autoposting_time(callback: CallbackQuery, state: FSMContex
         reply_markup=kb)
 
 
-# publick last post in queue
+# get last post in queue
 @router.callback_query(F.data == 'last_post')
 async def process_public_next_post_in_queue(callback: CallbackQuery, swap_post: bool):
     post = await get_last_post_and_delete(users_data.get_active_channel(callback.from_user.id))
     if post:
-        id, text, image = post
-        if image:
-            await callback.message.answer_photo(image, text, reply_markup=create_post_actions_kb(swap_post))
+        id, text, image, video = post
+        if video:
+            await callback.message.answer_video(video=video, caption=text, reply_markup=create_post_actions_kb(swap_post))
+        elif image:
+            await callback.message.answer_photo(image=image, caption=text, reply_markup=create_post_actions_kb(swap_post))
         else:
-            await callback.message.answer(text, reply_markup=create_post_actions_kb(swap_post))
+            await callback.message.answer(text=text, reply_markup=create_post_actions_kb(swap_post))
     await callback.answer()
 
 
-# publick next post in queue
+# get next post in queue
 @router.callback_query(F.data == 'next_post')
 async def process_public_next_post_in_queue(callback: CallbackQuery, swap_post: bool):
     post = await get_next_post_and_delete(users_data.get_active_channel(callback.from_user.id))
     if post:
-        id, text, image = post
-        if image:
-            await callback.message.answer_photo(image, text, reply_markup=create_post_actions_kb(swap_post))
+        id, text, image, video = post
+        if video:
+            await callback.message.answer_video(video=video, caption=text, reply_markup=create_post_actions_kb(swap_post))
+        elif image:
+            await callback.message.answer_photo(image=image, caption=text, reply_markup=create_post_actions_kb(swap_post))
         else:
-            await callback.message.answer(text, reply_markup=create_post_actions_kb(swap_post))
+            await callback.message.answer(text=text, reply_markup=create_post_actions_kb(swap_post))
     await callback.answer()
 
 
@@ -252,48 +265,109 @@ async def process_open_bot_mode_menu(callback: CallbackQuery):
 # start create post process
 @router.callback_query(F.data == 'create_post')
 async def process_start_create_post(callback: CallbackQuery, state: FSMContext):
-    await state.set_state(CreatePostStates.waiting_for_text)
+    await state.clear()
+    await state.set_state(CreatePostStates.waiting_for_content_type)
+    kb = create_choose_content_type_kb()
     await callback.message.edit_text(
-        text="Введите текст для нового поста:",
-        reply_markup=create_back_to_main_menu_kb()
+        text="Что вы хотите добавить в пост?",
+        reply_markup=kb
     )
     await callback.answer()
 
-# receive post text
-@router.message(StateFilter(CreatePostStates.waiting_for_text))
+# Обработка выбора типа контента
+@router.callback_query(F.data.in_(['add_text', 'add_photo', 'add_video']), StateFilter(CreatePostStates.waiting_for_content_type))
+async def process_content_type_choice(callback: CallbackQuery, state: FSMContext):
+    if callback.data == 'add_text':
+        await state.set_state(CreatePostStates.waiting_for_text_input)
+        await callback.message.edit_text(
+            text="Введите текст для поста:",
+            reply_markup=create_back_to_choose_content_type_kb()
+        )
+    elif callback.data == 'add_photo':
+        await state.set_state(CreatePostStates.waiting_for_photo_input)
+        await callback.message.edit_text(
+            text="Отправьте фотографию для поста:",
+            reply_markup=create_back_to_choose_content_type_kb()
+        )
+    elif callback.data == 'add_video':
+        await state.set_state(CreatePostStates.waiting_for_video_input)
+        await callback.message.edit_text(
+            text="Отправьте видео для поста:",
+            reply_markup=create_back_to_choose_content_type_kb()
+        )
+    await callback.answer()
+
+# Получение текста
+@router.message(StateFilter(CreatePostStates.waiting_for_text_input))
 async def process_receive_post_text(message: Message, state: FSMContext):
     await state.update_data(post_text=message.text)
-    await state.set_state(CreatePostStates.waiting_for_photo)
+    kb = create_choose_content_type_kb()
+    await state.set_state(CreatePostStates.waiting_for_content_type)
     await message.answer(
-        text="Теперь отправьте фотографию для поста:",
-        reply_markup=create_back_to_main_menu_or_skip_kb()
+        text="Добавить ещё что-то?",
+        reply_markup=kb
     )
 
-# skip photo
-@router.callback_query(F.data=='skip', StateFilter(CreatePostStates.waiting_for_photo))
-async def process_skip_photo(callback: CallbackQuery, state: FSMContext):
-    data = await state.get_data()
-    post_text = data.get("post_text", "")
-    await callback.message.answer(
-        text=post_text,
-        reply_markup=create_post_actions_kb(swap_post=False)
-    )
-    await state.clear()
-
-# receive post photo and send preview with actions
-@router.message(F.photo, StateFilter(CreatePostStates.waiting_for_photo))
+# Получение фото
+@router.message(F.photo, StateFilter(CreatePostStates.waiting_for_photo_input))
 async def process_receive_post_photo(message: Message, state: FSMContext):
+    photo_id = message.photo[-1].file_id
+    await state.update_data(photo_id=photo_id)
+    kb = create_choose_content_type_kb()
+    await state.set_state(CreatePostStates.waiting_for_content_type)
+    await message.answer(
+        text="Добавить ещё что-то?",
+        reply_markup=kb
+    )
+
+# Получение видео
+@router.message(F.video, StateFilter(CreatePostStates.waiting_for_video_input))
+async def process_receive_post_video(message: Message, state: FSMContext):
+    video_id = message.video.file_id
+    await state.update_data(video_id=video_id)
+    kb = create_choose_content_type_kb()
+    await state.set_state(CreatePostStates.waiting_for_content_type)
+    await message.answer(
+        text="Добавить ещё что-то?",
+        reply_markup=kb
+    )
+
+# Кнопка "Готово" для подтверждения поста
+@router.callback_query(F.data == 'done', StateFilter(CreatePostStates.waiting_for_content_type))
+async def process_confirm_post(callback: CallbackQuery, state: FSMContext):
     data = await state.get_data()
     post_text = data.get("post_text", "")
-    photo_id = message.photo[-1].file_id
-    
-    await message.answer_photo(
-        photo=photo_id,
-        caption=post_text,
-        reply_markup=create_post_actions_kb(swap_post=False)
-    )
+    photo_id = data.get("photo_id")
+    video_id = data.get("video_id")
+    await callback.message.delete()
+    if video_id:
+        await callback.message.answer_video(
+            video=video_id,
+            caption=post_text,
+            reply_markup=create_post_actions_kb(swap_post=False)
+        )
+        if photo_id:
+            await callback.answer(text='⚠️ Пост содержит и фото и видео. Будет отправлено только видео',
+                                  show_alert=True)
+        
+    elif photo_id:
+        await callback.message.answer_photo(
+            photo=photo_id,
+            caption=post_text,
+            reply_markup=create_post_actions_kb(swap_post=False)
+        )
+    elif post_text:
+        await callback.message.answer(
+            text=post_text,
+            reply_markup=create_post_actions_kb(swap_post=False)
+        )
+    else:
+        await callback.answer(
+            text="Пост не содержит контента. Пожалуйста, добавьте текст, фото или видео.",
+            show_alert=True
+        )
     await state.clear()
-    
+
     
 # ====================================================================================   
 

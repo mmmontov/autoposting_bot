@@ -10,8 +10,10 @@ from app.parsing.recipes_parsing.ovkuse_parsing import create_recipe
 
 async def publick_post(channel: str):
     try:
-        id, text, photo = await get_next_post_and_delete(channel=channel)
-        if photo:
+        id, text, photo, video = await get_next_post_and_delete(channel=channel)
+        if video:
+            await bot.send_video(channel, caption=text, video=video)
+        elif photo:
             await bot.send_photo(channel, caption=text, photo=photo)
         else:
             await bot.send_message(channel, text)
