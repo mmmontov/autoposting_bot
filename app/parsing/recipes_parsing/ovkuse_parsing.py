@@ -6,8 +6,9 @@ from app.core.config import config
 
 
 async def create_recipe():
-    recipe_text, recipe_image = await _parse_recipe()
-    
+    recipe = await _parse_recipe()
+    print(recipe)
+    recipe_text, recipe_image = recipe
     if recipe_text:
         recipe = await generate_recipe(recipe_text)
     return recipe, recipe_image
@@ -43,7 +44,7 @@ async def generate_recipe(recipe):
 
 
 async def _parse_recipe():
-    headers = {'user-agent': UserAgent().random}
+    headers = {'user-agent': UserAgent().chrome}
     random_url = 'https://ovkuse.ru/catalog/random'
 
     async with aiohttp.ClientSession() as session:

@@ -1,3 +1,5 @@
+import asyncio
+
 from app.bot.create_bot import bot
 from app.services.queue_service import *
 from datetime import datetime
@@ -7,6 +9,8 @@ from aiogram.types import Message
 from app.parsing.facts_parsing.facts_museum_parsing import gather_fact
 from app.bot.keyboards.post_actions_keyboard import create_post_actions_kb
 from app.parsing.recipes_parsing.ovkuse_parsing import create_recipe
+
+SLEEP_TIMEOUT = 10
 
 async def publick_post(channel: str):
     try:
@@ -34,12 +38,15 @@ async def send_fact(message: Message, swap_post=True):
                                     reply_markup=create_post_actions_kb(swap_post)) 
     except ValidationError as err:
         print('ошибка в отправке')
+        await asyncio.sleep(SLEEP_TIMEOUT)
         await send_fact(message, swap_post)
     except TypeError as err:
         print('ошибка в распаковке')
+        await asyncio.sleep(SLEEP_TIMEOUT)
         await send_fact(message, swap_post)
     except TelegramBadRequest:
         print('сообщение слишком длинное') 
+        await asyncio.sleep(SLEEP_TIMEOUT)
         await send_fact(message, swap_post)
         
 # отправка сообщения с рецептом
@@ -51,11 +58,14 @@ async def send_recipe(message: Message, swap_post=True):
         return recipe_message
     except ValidationError as err:
         print(f'ошибка в отправке {err}')
+        await asyncio.sleep(SLEEP_TIMEOUT)
         await send_recipe(message, swap_post)
     except TypeError as err:
         print(f'ошибка в распаковке {err}')
+        await asyncio.sleep(SLEEP_TIMEOUT)
         await send_recipe(message, swap_post)
     except TelegramBadRequest:
         print('сообщение слишком длинное') 
+        await asyncio.sleep(SLEEP_TIMEOUT)
         await send_recipe(message, swap_post)
 

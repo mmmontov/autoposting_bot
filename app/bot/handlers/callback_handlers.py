@@ -200,7 +200,7 @@ async def process_public_next_post_in_queue(callback: CallbackQuery, swap_post: 
         if video:
             await callback.message.answer_video(video=video, caption=text, reply_markup=create_post_actions_kb(swap_post))
         elif image:
-            await callback.message.answer_photo(image=image, caption=text, reply_markup=create_post_actions_kb(swap_post))
+            await callback.message.answer_photo(photo=image, caption=text, reply_markup=create_post_actions_kb(swap_post))
         else:
             await callback.message.answer(text=text, reply_markup=create_post_actions_kb(swap_post))
     await callback.answer()
@@ -215,7 +215,7 @@ async def process_public_next_post_in_queue(callback: CallbackQuery, swap_post: 
         if video:
             await callback.message.answer_video(video=video, caption=text, reply_markup=create_post_actions_kb(swap_post))
         elif image:
-            await callback.message.answer_photo(image=image, caption=text, reply_markup=create_post_actions_kb(swap_post))
+            await callback.message.answer_photo(photo=image, caption=text, reply_markup=create_post_actions_kb(swap_post))
         else:
             await callback.message.answer(text=text, reply_markup=create_post_actions_kb(swap_post))
     await callback.answer()
