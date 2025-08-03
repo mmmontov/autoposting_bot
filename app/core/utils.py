@@ -15,7 +15,8 @@ class ChannelsControl:
     }
     
     regenerate_post_accept = [
-        '@best_tasty_recipes'
+        '@best_tasty_recipes',
+        '@world_of_amazing_facts'
     ]
     
     

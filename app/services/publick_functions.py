@@ -31,7 +31,6 @@ async def send_fact(message: Message, swap_post=True):
         post_text, image_url = await gather_fact()
         # если присутствует текст    
         if post_text:
-            post_text += '\n\n@world_of_amazing_facts'
                 
             await message.answer_photo(photo=image_url, 
                                     caption=post_text, 

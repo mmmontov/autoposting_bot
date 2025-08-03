@@ -10,6 +10,7 @@ from app.services.format_text import format_main_menu_text
 from app.bot.keyboards.post_actions_keyboard import *
 from app.core.config import config
 from app.parsing.recipes_parsing.ovkuse_parsing import *
+from app.parsing.facts_parsing.facts_museum_parsing import generate_fact
 from app.core.utils import ChannelsControl
 from app.services.queue_service import *
 from app.services.scheduler import *
@@ -121,12 +122,17 @@ async def process_delete_first_string(callback: CallbackQuery, regenerate_post: 
 @router.callback_query(F.data == 'regenerate_text')
 async def process_regenerate_text(callback: CallbackQuery, regenerate_post: bool):
     active_channel = users_data.get_active_channel(callback.from_user.id)
+    text = callback.message.caption
     if active_channel == '@best_tasty_recipes':
-        text = callback.message.caption
         new_text = await generate_recipe(text)
         await callback.message.edit_caption(caption=new_text,
                                             reply_markup=create_edit_post_kb(regenerate_post))
-        await callback.answer()
+
+    elif active_channel == '@world_of_amazing_facts':
+        new_text = await generate_fact(text)
+        await callback.message.edit_caption(caption=new_text,
+                                            reply_markup=create_edit_post_kb(regenerate_post))
+
     else:
         await callback.answer(text='⚠️ эта функция недоступна для постов из этого канала',
                                 show_alert=True)

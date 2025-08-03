@@ -1,6 +1,9 @@
 import aiohttp
 from bs4 import BeautifulSoup
 from fake_useragent import UserAgent
+from openai import AsyncOpenAI
+import aiohttp, aiofiles
+from app.core.config import config
 
 
 
@@ -25,16 +28,50 @@ async def fact_parse():
         else:
             fact_parse()
         
+        
 # промежуточная функция (хз зач)    
 async def gather_fact():
     fact = await fact_parse()
     if fact:
         fact_text, fact_image = fact
+        # if fact_text:
+        #     fact_text = await generate_fact(fact_text)
         return fact_text, fact_image
     else:
         return None
             
             
+
+async def generate_fact(fact):
+    client = AsyncOpenAI(
+        base_url=config.open_router.base_url,
+        api_key=config.open_router.api_key,
+    )
+    async with aiofiles.open('app/parsing/facts_parsing/facts_prompt.txt', 'r') as f:
+        prompt_template = await f.read()
+        
+    prompt = prompt_template.format( # Можно вынести в конфиг
+        max_chars=250,
+        channel_tag='https://t.me/world_of_amazing_facts',
+        fact=fact,
+    )
+    
+    
+    completion = await client.chat.completions.create(
+        model=config.open_router.model,
+        messages=[
+            {
+            "role": "user",
+            "content": prompt
+            }
+        ]
+    )
+    fact = completion.choices[0].message.content
+    return fact.strip() if fact else "⚠️ Не удалось сгенерировать факт."
+
+
+        
+        
 if __name__ == '__main__':
     import asyncio
     asyncio.run(fact_parse())
