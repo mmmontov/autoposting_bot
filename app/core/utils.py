@@ -11,12 +11,12 @@ from app.db.models.queue_registry import tables_registry
 class ChannelsControl:
     parsers = {
         '@best_tasty_recipes': send_recipe,
-        '@world_of_amazing_facts': send_fact
+        '@factzap': send_fact
     }
     
     regenerate_post_accept = [
         '@best_tasty_recipes',
-        '@world_of_amazing_facts'
+        '@factzap'
     ]
     
     

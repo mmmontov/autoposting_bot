@@ -52,7 +52,7 @@ async def generate_fact(fact):
         
     prompt = prompt_template.format( # Можно вынести в конфиг
         max_chars=250,
-        channel_tag='https://t.me/world_of_amazing_facts',
+        channel_tag='@factzap',
         fact=fact,
     )
     
@@ -66,6 +66,7 @@ async def generate_fact(fact):
             }
         ]
     )
+    # print(completion)
     fact = completion.choices[0].message.content
     return fact.strip() if fact else "⚠️ Не удалось сгенерировать факт."
 

@@ -128,7 +128,7 @@ async def process_regenerate_text(callback: CallbackQuery, regenerate_post: bool
         await callback.message.edit_caption(caption=new_text,
                                             reply_markup=create_edit_post_kb(regenerate_post))
 
-    elif active_channel == '@world_of_amazing_facts':
+    elif active_channel == '@factzap':
         new_text = await generate_fact(text)
         await callback.message.edit_caption(caption=new_text,
                                             reply_markup=create_edit_post_kb(regenerate_post))
